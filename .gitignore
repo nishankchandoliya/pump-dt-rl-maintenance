@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Virtual environments (ours lives outside this folder)
+.venv/
+venv/
+env/
+
+# Local planning and working notes: never pushed
+notes/
+
+# Generated data: recreate it with the scripts
+data/
+*.log
+
+# Intermediate model checkpoints (final models in models/ are committed)
+models/checkpoints/
+
+# macOS and Google Drive files
+.DS_Store
+Icon?
+.tmp.drivedownload/
+.tmp.driveupload/
+
+# Editor settings
+.vscode/
+.idea/
