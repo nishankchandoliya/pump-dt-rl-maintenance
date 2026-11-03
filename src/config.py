@@ -12,6 +12,10 @@ VAL_SEEDS = list(range(1000, 1050))
 TEST_SEEDS = list(range(2000, 2200))
 TRAIN_SEED_START = 10_000
 
+# Seeds used only to calibrate and study the Digital Twin (never for policies).
+CALIBRATION_SEEDS = list(range(5000, 5300))
+EDA_SEEDS = list(range(6000, 6500))
+
 # One step = one week. One episode = 10 years.
 EPISODE_WEEKS = 520
 
@@ -23,11 +27,11 @@ LOAD_TRANSITIONS = [
     [0.05, 0.15, 0.80],
 ]
 
-# Digital Twin constants. Wear rates are per week of running.
+# Digital Twin constants, calibrated in Phase 3 (scripts/calibrate_twin.py). Wear rates are per week of running.
 PUMP = {
-    "bearing_rate": 0.0557,
-    "bearing_offset": 0.05,
-    "impeller_rate": 0.00827,
+    "bearing_rate": 0.0889,
+    "bearing_offset": 0.01,
+    "impeller_rate": 0.00843,
     "noise_shape": 4.0,
     "quality_spread": 0.3,
     "vib_base": 1.6,
@@ -38,6 +42,7 @@ PUMP = {
     "temp_base": 55.0,
     "temp_load": 10.0,
     "temp_bearing": 30.0,
+    "temp_power": 5,
     "temp_noise": 1.0,
     "eff_new": 0.80,
     "eff_loss": 0.08,

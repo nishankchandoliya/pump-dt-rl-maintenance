@@ -1,0 +1,9 @@
+target,measured,passed
+mean bearing life 90 to 120 weeks,102.854,True
+mean impeller life 200 to 260 weeks,232.682,True
+zone C at least 4 weeks before failure in 90% of runs,0.996,True
+median vibration alarm lead 4 to 8 weeks,6.0,True
+temperature rise not before zone C in 90% of runs,0.996,True
+median temperature alarm lead 1 to 3 weeks,1.0,True
+temperature alarm not before zone C in 90% of runs,1.0,True
+mean temperature at failure 88 to 98 °C,91.124,True

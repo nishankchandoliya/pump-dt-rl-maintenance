@@ -1,0 +1,14 @@
+,value
+bearing_first,0.98
+vib_c_4wk,0.9959183673469387
+vib_c_median,10.5
+vib_alarm_median,6.0
+temp_flat,0.9959183673469387
+temp_rise_median,8.0
+temp_alarm_median,1.0
+temp_alarm_after_vib,1.0
+no_temp_alarm,0.0
+temp_at_failure,91.13240046657754
+bearing_life_mean,102.884
+impeller_life_mean,232.808
+all_targets,True

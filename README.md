@@ -11,7 +11,7 @@ A centrifugal pump in a thermal power plant wears out as it runs. This project b
 | 0 | Problem statement and repository setup | Done |
 | 1 | Domain study and data source decision | Done |
 | 2 | Digital Twin | Done |
-| 3 | Twin verification and EDA | Not started |
+| 3 | Twin verification, calibration and EDA | Done |
 | 4 | RL environment | Not started |
 | 5 | Baselines and evaluation harness | Not started |
 | 6 | Tabular Q-learning with value iteration check | Not started |
@@ -41,15 +41,27 @@ flowchart LR
 ```
 .
 ├── README.md
-├── requirements.txt      pinned library versions
-├── pytest.ini            test settings
+├── requirements.txt          pinned library versions
+├── pytest.ini                test settings
 ├── src/
-│   ├── config.py         paths, seed ranges and all Digital Twin constants
-│   └── pump_twin.py      the pump Digital Twin (load, wear, sensors, maintenance)
+│   ├── config.py             paths, seed ranges and all Digital Twin constants
+│   ├── pump_twin.py          the pump Digital Twin (load, wear, sensors, maintenance)
+│   └── twin_sim.py           runs the twin to failure and measures lifetimes and warning times
+├── scripts/
+│   ├── calibrate_twin.py     chooses the twin constants against written targets
+│   └── simulate_twin.py      writes the run to failure data used by the EDA notebook
+├── notebooks/
+│   └── 02_twin_eda.ipynb     checks of the twin and preprocessing decisions
+├── results/
+│   ├── figures/              figures saved by the notebook
+│   └── tables/               calibration grid, target check, smoothing comparison
 └── tests/
-    ├── test_setup.py     checks that the environment works
-    └── test_twin.py      checks the Digital Twin
+    ├── test_setup.py         checks that the environment works
+    ├── test_twin.py          checks the Digital Twin
+    └── test_twin_sim.py      checks the simulation tools and the calibration targets
 ```
+
+`data/` is created by `scripts/simulate_twin.py` and is not stored in the repository. More folders (`models/`) are added in the phases that need them.
 
 ## The Digital Twin
 
@@ -61,7 +73,23 @@ The twin simulates one motor driven boiler feed pump in a coal fired power plant
 - **Maintenance:** minor maintenance renews the bearing; a major overhaul renews bearing and impeller; a failed pump must be repaired.
 - **Limits:** vibration zones from ISO 10816-7 (Category I, above 200 kW) and bearing temperature limits from a power plant pump specification.
 
-More folders (`scripts/`, `notebooks/`, `models/`, `results/`) are added in the phases that need them.
+## Checking the twin
+
+The wear and sensor constants were not guessed. `scripts/calibrate_twin.py` tests 60 combinations on one set of random seeds and keeps the one that meets every written target, using a fixed order of preference. The result is then checked on 500 fresh seeds that the calibration never used:
+
+| Target | Measured on fresh seeds |
+|---|---|
+| Mean bearing life 90 to 120 weeks | 102.9 weeks |
+| Mean impeller life 200 to 260 weeks | 232.7 weeks |
+| Vibration in ISO zone C at least 4 weeks before a bearing failure, in at least 90% of runs | 99.6% |
+| Median lead of the vibration alarm (6.3 mm/s): 4 to 8 weeks | 6 weeks |
+| Median lead of the temperature alarm (85 °C): 1 to 3 weeks | 1 week |
+| Temperature rises only after vibration enters zone C, in at least 90% of runs | 99.6% |
+| Mean temperature at failure 88 to 98 °C (trip at 90 °C) | 91.1 °C |
+
+![Three runs to bearing failure](results/figures/twin_example_runs.png)
+
+The EDA notebook also decides how the readings are prepared for the agent. Load changes the healthy temperature by 4.5 °C, so vibration and temperature are used as the excess over a new pump at the same load. They are not smoothed, because near failure the signal climbs faster than the noise and any moving average adds delay. Efficiency changes slowly, so it is averaged over 8 weeks.
 
 ## Setup
 
@@ -76,7 +104,19 @@ pip install -r requirements.txt
 python -m pytest
 ```
 
-All tests should pass. Tested on macOS (Apple silicon, Python 3.12.2) and Linux (Python 3.12.3).
+All tests should pass (about 40 seconds). Tested on macOS (Apple silicon, Python 3.12.2) and Linux (Python 3.12.3).
+
+## Running the Phase 3 checks
+
+Run these from the repository root:
+
+```bash
+python -m scripts.calibrate_twin      # about 4 minutes; writes results/tables/twin_calibration_*.csv
+python -m scripts.simulate_twin       # about 1.5 minutes; writes data/twin_runs.csv and data/twin_lives.csv
+jupyter notebook notebooks/02_twin_eda.ipynb
+```
+
+The calibration script does not change `src/config.py`. It prints the chosen constants, which are copied into `config.PUMP` by hand. Every run uses fixed seeds, so the results are the same each time.
 
 ## Author
 

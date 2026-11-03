@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from src import config
-from src.pump_twin import PumpTwin
+from src.pump_twin import PumpTwin, sensor_values
 
 
 def run_to_failure(twin, seed, load=None):
@@ -174,15 +174,21 @@ def test_new_pump_readings_are_normal_at_every_load():
         assert 0.78 < r["efficiency"] < 0.82
 
 
-def test_readings_stay_physical_until_failure():
+def test_readings_stay_physical_up_to_the_failure_week():
     twin = PumpTwin()
-    for seed in range(20):
+    for seed in range(300):
         twin.reset(seed)
         while not twin.failure and twin.week < twin.weeks:
             r = twin.step()
-            assert 0 < r["vibration"] < 15
-            assert 40 < r["temperature"] < 110
+            assert 0 < r["vibration"] < 12
+            assert 40 < r["temperature"] < 100
             assert 0.6 < r["efficiency"] < 0.85
+
+
+def test_readings_use_wear_of_at_most_one():
+    p = config.PUMP
+    assert sensor_values(p, 0.75, 1.3, 1.2) == sensor_values(p, 0.75, 1.0, 1.0)
+    assert sensor_values(p, 0.75, 0.9, 0.5) != sensor_values(p, 0.75, 1.0, 0.5)
 
 
 def test_bearing_failure_shows_in_vibration_and_temperature():

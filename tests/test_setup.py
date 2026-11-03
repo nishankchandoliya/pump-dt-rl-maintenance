@@ -26,10 +26,11 @@ def test_gymnasium_api():
 
 
 def test_seed_sets_do_not_overlap():
-    val = set(config.VAL_SEEDS)
-    test = set(config.TEST_SEEDS)
-    assert not val & test
-    assert config.TRAIN_SEED_START > max(val | test)
+    sets = [set(config.VAL_SEEDS), set(config.TEST_SEEDS), set(config.CALIBRATION_SEEDS), set(config.EDA_SEEDS)]
+    for i in range(len(sets)):
+        for j in range(i + 1, len(sets)):
+            assert not sets[i] & sets[j]
+    assert config.TRAIN_SEED_START > max(set().union(*sets))
 
 
 def test_root_is_repo_folder():

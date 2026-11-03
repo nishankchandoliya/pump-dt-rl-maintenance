@@ -3,6 +3,15 @@ import numpy as np
 from src import config
 
 
+def sensor_values(p, load, b, w):
+    # Wear can pass 1 during the failure week. Above 1 the part has already failed, so the readings use at most 1.
+    b, w = np.minimum(b, 1.0), np.minimum(w, 1.0)
+    vibration = p["vib_base"] + p["vib_load"] * load + p["vib_bearing"] * b**2 + p["vib_impeller"] * w
+    temperature = p["temp_base"] + p["temp_load"] * load**2 + p["temp_bearing"] * b ** p["temp_power"]
+    efficiency = p["eff_new"] - p["eff_loss"] * w
+    return vibration, temperature, efficiency
+
+
 class PumpTwin:
     def __init__(self, params=None, weeks=config.EPISODE_WEEKS):
         self.p = dict(config.PUMP if params is None else params)
@@ -82,7 +91,7 @@ class PumpTwin:
         self.failure = None
 
     def efficiency(self):
-        return self.p["eff_new"] - self.p["eff_loss"] * self.impeller_wear
+        return sensor_values(self.p, 0.0, 0.0, self.impeller_wear)[2]
 
     def _renew_all(self):
         self.bearing_wear = 0.0
@@ -96,15 +105,12 @@ class PumpTwin:
 
     def _readings(self, load, noise):
         p = self.p
-        b = self.bearing_wear
-        w = self.impeller_wear
-        vibration = p["vib_base"] + p["vib_load"] * load + p["vib_bearing"] * b**2 + p["vib_impeller"] * w
-        temperature = p["temp_base"] + p["temp_load"] * load**2 + p["temp_bearing"] * b**3
+        vibration, temperature, efficiency = sensor_values(p, load, self.bearing_wear, self.impeller_wear)
         return {
             "load": float(load),
             "vibration": float(vibration + p["vib_noise"] * noise[0]),
             "temperature": float(temperature + p["temp_noise"] * noise[1]),
-            "efficiency": float(self.efficiency() + p["eff_noise"] * noise[2]),
+            "efficiency": float(efficiency + p["eff_noise"] * noise[2]),
         }
 
     def _make_load_path(self, rng):
