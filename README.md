@@ -9,7 +9,7 @@ A centrifugal pump in a thermal power plant wears out as it runs. This project b
 | Phase | Topic | Status |
 |---|---|---|
 | 0 | Problem statement and repository setup | Done |
-| 1 | Domain study and data source decision | Not started |
+| 1 | Domain study and data source decision | Done |
 | 2 | Digital Twin | Not started |
 | 3 | Twin verification and EDA | Not started |
 | 4 | RL environment | Not started |
