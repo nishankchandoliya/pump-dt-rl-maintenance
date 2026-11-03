@@ -10,7 +10,7 @@ A centrifugal pump in a thermal power plant wears out as it runs. This project b
 |---|---|---|
 | 0 | Problem statement and repository setup | Done |
 | 1 | Domain study and data source decision | Done |
-| 2 | Digital Twin | Not started |
+| 2 | Digital Twin | Done |
 | 3 | Twin verification and EDA | Not started |
 | 4 | RL environment | Not started |
 | 5 | Baselines and evaluation harness | Not started |
@@ -44,10 +44,22 @@ flowchart LR
 ├── requirements.txt      pinned library versions
 ├── pytest.ini            test settings
 ├── src/
-│   └── config.py         project paths and fixed seed ranges
+│   ├── config.py         paths, seed ranges and all Digital Twin constants
+│   └── pump_twin.py      the pump Digital Twin (load, wear, sensors, maintenance)
 └── tests/
-    └── test_setup.py     checks that the environment works
+    ├── test_setup.py     checks that the environment works
+    └── test_twin.py      checks the Digital Twin
 ```
+
+## The Digital Twin
+
+The twin simulates one motor driven boiler feed pump in a coal fired power plant, one week per step.
+
+- **Load:** weekly unit load (60%, 75% or 90% of rated flow) changes as a Markov chain.
+- **Hidden wear:** bearing wear grows faster as the bearing gets worse; impeller and wear ring wear grows steadily. Both grow with load². The shapes follow the NASA centrifugal pump prognostics model.
+- **Sensors:** vibration (mm/s RMS), bearing temperature (°C) and efficiency, each with noise. Vibration warns first and temperature rises only near the end, as in practice.
+- **Maintenance:** minor maintenance renews the bearing; a major overhaul renews bearing and impeller; a failed pump must be repaired.
+- **Limits:** vibration zones from ISO 10816-7 (Category I, above 200 kW) and bearing temperature limits from a power plant pump specification.
 
 More folders (`scripts/`, `notebooks/`, `models/`, `results/`) are added in the phases that need them.
 
