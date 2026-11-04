@@ -6,8 +6,6 @@ import pandas as pd
 from src import config
 from src.twin_sim import TARGETS, check_targets, mode_lifetimes, warning_summary
 
-BEARING_LIFE = 104
-IMPELLER_LIFE = 230
 GRID = {
     "bearing_offset": [0.01, 0.02, 0.03, 0.05],
     "temp_power": [3, 4, 5, 6, 8],
@@ -40,11 +38,11 @@ def score(row):
 
 def main():
     seeds = config.CALIBRATION_SEEDS
-    base = tune_rate(dict(config.PUMP, **START_RATES), "impeller_rate", "impeller", IMPELLER_LIFE, seeds)
+    base = tune_rate(dict(config.PUMP, **START_RATES), "impeller_rate", "impeller", config.DESIGN_LIFE["impeller"], seeds)
     rows = []
     for offset in GRID["bearing_offset"]:
         p = dict(base, bearing_offset=offset)
-        p = tune_rate(p, "bearing_rate", "bearing", BEARING_LIFE, seeds)
+        p = tune_rate(p, "bearing_rate", "bearing", config.DESIGN_LIFE["bearing"], seeds)
         for power, coef in itertools.product(GRID["temp_power"], GRID["temp_bearing"]):
             q = dict(p, temp_power=power, temp_bearing=coef)
             m = warning_summary(q, seeds)

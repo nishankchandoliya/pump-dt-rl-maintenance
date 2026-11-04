@@ -12,7 +12,7 @@ A centrifugal pump in a thermal power plant wears out as it runs. This project b
 | 1 | Domain study and data source decision | Done |
 | 2 | Digital Twin | Done |
 | 3 | Twin verification, calibration and EDA | Done |
-| 4 | RL environment | Not started |
+| 4 | RL formulation and environment | Done (cost values under review) |
 | 5 | Baselines and evaluation harness | Not started |
 | 6 | Tabular Q-learning with value iteration check | Not started |
 | 7 | DQN agent in PyTorch | Not started |
@@ -46,10 +46,12 @@ flowchart LR
 ├── src/
 │   ├── config.py             paths, seed ranges and all Digital Twin constants
 │   ├── pump_twin.py          the pump Digital Twin (load, wear, sensors, maintenance)
-│   └── twin_sim.py           runs the twin to failure and measures lifetimes and warning times
+│   ├── twin_sim.py           runs the twin to failure and measures lifetimes and warning times
+│   └── pump_env.py           Gymnasium environment: observation, actions, reward
 ├── scripts/
 │   ├── calibrate_twin.py     chooses the twin constants against written targets
-│   └── simulate_twin.py      writes the run to failure data used by the EDA notebook
+│   ├── simulate_twin.py      writes the run to failure data used by the EDA notebook
+│   └── check_env.py          worked example and simple policies on the environment
 ├── notebooks/
 │   └── 02_twin_eda.ipynb     checks of the twin and preprocessing decisions
 ├── results/
@@ -58,7 +60,8 @@ flowchart LR
 └── tests/
     ├── test_setup.py         checks that the environment works
     ├── test_twin.py          checks the Digital Twin
-    └── test_twin_sim.py      checks the simulation tools and the calibration targets
+    ├── test_twin_sim.py      checks the simulation tools and the calibration targets
+    └── test_env.py           checks the RL environment and its rewards
 ```
 
 `data/` is created by `scripts/simulate_twin.py` and is not stored in the repository. More folders (`models/`) are added in the phases that need them.
@@ -91,6 +94,24 @@ The wear and sensor constants were not guessed. `scripts/calibrate_twin.py` test
 
 The EDA notebook also decides how the readings are prepared for the agent. Load changes the healthy temperature by 4.5 °C, so vibration and temperature are used as the excess over a new pump at the same load. They are not smoothed, because near failure the signal climbs faster than the noise and any moving average adds delay. Efficiency changes slowly, so it is averaged over 8 weeks.
 
+## The RL environment
+
+`src/pump_env.py` wraps the twin as a Gymnasium environment. Each step is one maintenance decision.
+
+- **Observation (6 numbers):** excess vibration and excess temperature over a new pump at the same load, an impeller wear estimate from the 8 week average efficiency, the load, and the running weeks since the bearing and the impeller were renewed. The true wear stays hidden, so the problem is only partly observable.
+- **Actions:** 0 continue, 1 minor maintenance (new bearing, 3 days), 2 major overhaul (new bearing and impeller, 2 weeks).
+- **Reward:** minus the total cost of the step: extra energy from a worn impeller, maintenance, failure repair and downtime. One cost unit is one week of the pump's full load energy (about ₹23.5 lakh).
+- **Time:** a step that includes downtime lasts more than one week and is discounted by γ per week (γ = 0.99). A failure does not end the episode: the pump is repaired. Episodes last 10 years and end by time limit.
+
+| Event | Cost with downtime (units) |
+|---|---|
+| Minor maintenance | 0.71 |
+| Major overhaul | 3.5 |
+| Bearing failure | 7.5 |
+| Impeller end of life | 5.0 |
+
+On 50 validation seeds, running to failure costs 38.5 ± 1.3 units per 10 years. The best simple fixed maintenance intervals cost about 25 to 27, so planned maintenance pays off and there is something for a smarter policy to learn.
+
 ## Setup
 
 Requires Python 3.12. The virtual environment is kept outside the project folder.
@@ -104,9 +125,9 @@ pip install -r requirements.txt
 python -m pytest
 ```
 
-All tests should pass (about 40 seconds). Tested on macOS (Apple silicon, Python 3.12.2) and Linux (Python 3.12.3).
+All tests should pass (about a minute). Tested on macOS (Apple silicon, Python 3.12.2) and Linux (Python 3.12.3).
 
-## Running the Phase 3 checks
+## Running the checks
 
 Run these from the repository root:
 
@@ -114,6 +135,7 @@ Run these from the repository root:
 python -m scripts.calibrate_twin      # about 4 minutes; writes results/tables/twin_calibration_*.csv
 python -m scripts.simulate_twin       # about 1.5 minutes; writes data/twin_runs.csv and data/twin_lives.csv
 jupyter notebook notebooks/02_twin_eda.ipynb
+python -m scripts.check_env           # about 20 seconds; worked example and simple policies
 ```
 
 The calibration script does not change `src/config.py`. It prints the chosen constants, which are copied into `config.PUMP` by hand. Every run uses fixed seeds, so the results are the same each time.

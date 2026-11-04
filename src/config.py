@@ -59,3 +59,12 @@ VIB_TRIP = 9.5
 # Journal bearing limits from a BHEL power plant pump specification (°C)
 TEMP_ALARM = 85.0
 TEMP_TRIP = 90.0
+
+# Design lives in weeks: the calibration targets and the scale of the part age features.
+DESIGN_LIFE = {"bearing": 104, "impeller": 230}
+
+# RL environment (Phase 4). Costs are in units of the energy cost of one week of running a new pump at full load
+# (about 4 MW x 168 h x 3.5 Rs/kWh = 23.5 lakh Rs). Values and sources are in notes/rl_formulation.md.
+COSTS = {"minor": 0.5, "major": 2.5, "bearing_failure": 5.0, "impeller_failure": 2.5, "downtime_week": 0.5}
+GAMMA = 0.99
+EFF_WINDOW = 8

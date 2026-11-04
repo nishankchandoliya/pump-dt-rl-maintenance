@@ -75,6 +75,11 @@ class PumpTwin:
         self.week += weeks
         return weeks
 
+    def read(self):
+        # A reading without running a week, for example after downtime. Uses the load of the coming week.
+        load = self.load_path[min(self.week, self.weeks - 1)]
+        return self._readings(load, self.sensor_noise[self.week])
+
     def minor_maintenance(self):
         self._check_not_failed()
         self.bearing_wear = 0.0
