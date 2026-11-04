@@ -12,8 +12,8 @@ GRID = {
     "temp_bearing": [30, 33, 36],
 }
 
-# Wear rates the tuning starts from (the Phase 2 values). They are fixed here so that a re-run gives
-# the same table even after config.PUMP holds the calibrated values.
+# wear rates the tuning starts from (the Phase 2 values). They are fixed here so that a rerun gives
+# the same table even after config.PUMP holds the calibrated values
 START_RATES = {"bearing_rate": 0.0557, "impeller_rate": 0.00827}
 
 WARNING_TARGETS = [name for name in TARGETS if not name.endswith("_life")]
@@ -28,8 +28,8 @@ def tune_rate(params, key, mode, target, seeds):
     return p
 
 
-# Order of preference: (1) temperature at failure at the 90 °C trip, to the nearest degree, as vibration is at its trip;
-# (2) alarm lead times near the middle of their target ranges; (3) the lowest power, the smallest change from Phase 2.
+# order of preference: (1) temperature at failure at the 90 °C trip, to the nearest degree, as vibration is at its trip;
+# (2) alarm lead times near the middle of their target ranges; (3) the lowest power, the smallest change from Phase 2
 def score(row):
     return (round(abs(row["temp_at_failure"] - 90)),
             abs(row["vib_alarm_median"] - 6) + abs(row["temp_alarm_median"] - 2),

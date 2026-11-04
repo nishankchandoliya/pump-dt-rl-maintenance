@@ -65,7 +65,7 @@ def bearing_warnings(runs, params=None):
     return pd.DataFrame(rows)
 
 
-# Targets from the parameter table, fixed before calibration (relaxed temperature rule agreed in Phase 3).
+# targets from the parameter table, fixed before calibration (relaxed temperature rule agreed in Phase 3)
 TARGETS = {
     "bearing_life": lambda m: 90 <= m["bearing_life_mean"] <= 120,
     "impeller_life": lambda m: 200 <= m["impeller_life_mean"] <= 260,

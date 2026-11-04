@@ -4,7 +4,7 @@ from src import config
 
 
 def sensor_values(p, load, b, w):
-    # Wear can pass 1 during the failure week. Above 1 the part has already failed, so the readings use at most 1.
+    # wear can pass 1 during the failure week. Above 1 the part has already failed, so the readings use at most 1
     b, w = np.minimum(b, 1.0), np.minimum(w, 1.0)
     vibration = p["vib_base"] + p["vib_load"] * load + p["vib_bearing"] * b**2 + p["vib_impeller"] * w
     temperature = p["temp_base"] + p["temp_load"] * load**2 + p["temp_bearing"] * b ** p["temp_power"]
@@ -23,8 +23,8 @@ class PumpTwin:
         if not (0 <= bearing_wear < 1 and 0 <= impeller_wear < 1):
             raise ValueError("initial wear must be in [0, 1)")
 
-        # All randomness of the run is drawn here, so every policy run with this seed
-        # sees the same load path, the same weekly noise and the same spare parts.
+        # all randomness of the run is drawn here, so every policy run with this seed
+        # sees the same load path, the same weekly noise and the same spare parts
         rng = np.random.default_rng(seed)
         self.load_path = self._make_load_path(rng)
         shape = self.p["noise_shape"]
@@ -76,7 +76,7 @@ class PumpTwin:
         return weeks
 
     def read(self):
-        # A reading without running a week, for example after downtime. Uses the load of the coming week.
+        # a reading without running a week, for example after downtime. Uses the load of the coming week
         load = self.load_path[min(self.week, self.weeks - 1)]
         return self._readings(load, self.sensor_noise[self.week])
 

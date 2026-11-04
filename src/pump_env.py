@@ -10,17 +10,20 @@ CONTINUE, MINOR, MAJOR = 0, 1, 2
 FEATURES = ["vibration", "temperature", "impeller_estimate", "load", "bearing_age", "impeller_age"]
 
 
+def obs_scales(p):
+    # scales from D30: trip limit minus a new pump at load 0.75, so 0 means as new and 1 about the trip level
+    vib_new, temp_new, _ = sensor_values(p, 0.75, 0.0, 0.0)
+    return config.VIB_TRIP - vib_new, config.TEMP_TRIP - temp_new
+
+
 class PumpEnv(gym.Env):
-    def __init__(self, params=None, costs=None):
-        self.twin = PumpTwin(params)
+    def __init__(self, params=None, costs=None, weeks=config.EPISODE_WEEKS):
+        self.twin = PumpTwin(params, weeks=weeks)
         self.p = self.twin.p
         self.costs = dict(config.COSTS if costs is None else costs)
         self.action_space = gym.spaces.Discrete(3)
         self.observation_space = gym.spaces.Box(-1.0, 5.0, shape=(len(FEATURES),), dtype=np.float32)
-        # Scales from D30: 0 means as new, 1 means about the trip level.
-        vib_new, temp_new, _ = sensor_values(self.p, 0.75, 0.0, 0.0)
-        self.vib_scale = config.VIB_TRIP - vib_new
-        self.temp_scale = config.TEMP_TRIP - temp_new
+        self.vib_scale, self.temp_scale = obs_scales(self.p)
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
@@ -60,7 +63,7 @@ class PumpEnv(gym.Env):
             run = running_days / 7
             self.bearing_age += run
             self.impeller_age += run
-            # Extra energy because of impeller wear. Pump power grows with load cubed (affinity laws).
+            # extra energy because of impeller wear. Pump power grows with load cubed (affinity laws)
             cost["energy"] = run * reading["load"] ** 3 * (self.p["eff_new"] / self.twin.efficiency() - 1)
 
             failure = self.twin.failure
