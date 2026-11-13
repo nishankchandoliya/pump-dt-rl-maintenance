@@ -1,0 +1,7 @@
+case,load,bearing_wear,impeller_wear,vibration,temperature,efficiency,bearing_weeks,impeller_weeks,zone,temperature_status,advice,cost_continue,cost_minor,cost_major,margin
+healthy pump in mid life,0.75,0.1,0.2,2.39,60.6253,0.784,54,44,A,normal,continue,7.463344,7.97054,9.537145,0.5071959495544434
+bearing half worn,0.75,0.5,0.3,4.13,61.5625,0.776,86,66,B,normal,continue,8.123462,8.393437,9.526105,0.2699756622314453
+bearing close to failure,0.75,0.9,0.3,8.05,78.3397,0.776,97,66,D,normal,minor maintenance,8.775101,8.388704,9.434798,0.3863964080810547
+"impeller worn, bearing healthy",0.75,0.1,0.8,2.75,60.6253,0.736,54,175,A,normal,continue,9.455729,10.0251875,9.53572,0.07999134063720703
+bearing and impeller worn,0.75,0.7,0.7,6.05,65.6671,0.744,92,152,C,normal,major overhaul,9.699375,9.717301,9.508887,0.19048786163330078
+"high load, bearing worn",0.9,0.75,0.3,6.4375,70.219140625,0.776,65,46,C,normal,minor maintenance,8.744003,8.652645,9.566619,0.09135818481445312

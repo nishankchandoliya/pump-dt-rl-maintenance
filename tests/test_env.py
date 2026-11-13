@@ -121,6 +121,18 @@ def test_maintenance_resets_show_in_observation():
     assert len(env.eff_history) == 1
 
 
+def test_impeller_estimate_uses_the_8_week_average():
+    env = PumpEnv()
+    env.reset(seed=4)
+    for week in range(12):
+        obs, _, _, _, _ = env.step(CONTINUE)
+        history = list(env.eff_history)
+        assert len(history) == min(week + 2, config.EFF_WINDOW)
+        assert np.isclose(obs[2], (0.80 - np.mean(history)) / 0.08, atol=1e-6)
+    # one noisy reading alone would give a clearly different estimate
+    assert not np.isclose(obs[2], (0.80 - history[-1]) / 0.08, atol=1e-3)
+
+
 def test_episode_length_and_truncation():
     env = PumpEnv()
     env.reset(seed=4)

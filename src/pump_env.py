@@ -16,6 +16,23 @@ def obs_scales(p):
     return config.VIB_TRIP - vib_new, config.TEMP_TRIP - temp_new
 
 
+def make_observation(p, reading, efficiency, bearing_age, impeller_age):
+    # reading: load, vibration and temperature of this week. efficiency: the 8 week average. Ages are in running
+    # weeks. The environment and the maintenance advisor both use this, so they build the observation the same way
+    vib_new, temp_new, _ = sensor_values(p, reading["load"], 0.0, 0.0)
+    vib_scale, temp_scale = obs_scales(p)
+    low, high = config.LOAD_LEVELS[0], config.LOAD_LEVELS[-1]
+    obs = [
+        (reading["vibration"] - vib_new) / vib_scale,
+        (reading["temperature"] - temp_new) / temp_scale,
+        (p["eff_new"] - efficiency) / p["eff_loss"],
+        (reading["load"] - low) / (high - low),
+        bearing_age / config.DESIGN_LIFE["bearing"],
+        impeller_age / config.DESIGN_LIFE["impeller"],
+    ]
+    return np.array(obs, dtype=np.float32)
+
+
 class PumpEnv(gym.Env):
     def __init__(self, params=None, costs=None, weeks=config.EPISODE_WEEKS):
         self.twin = PumpTwin(params, weeks=weeks)
@@ -92,16 +109,5 @@ class PumpEnv(gym.Env):
             self.eff_history.clear()
 
     def _observe(self, reading):
-        vib_new, temp_new, _ = sensor_values(self.p, reading["load"], 0.0, 0.0)
         self.eff_history.append(reading["efficiency"])
-        efficiency = np.mean(self.eff_history)
-        low, high = config.LOAD_LEVELS[0], config.LOAD_LEVELS[-1]
-        obs = [
-            (reading["vibration"] - vib_new) / self.vib_scale,
-            (reading["temperature"] - temp_new) / self.temp_scale,
-            (self.p["eff_new"] - efficiency) / self.p["eff_loss"],
-            (reading["load"] - low) / (high - low),
-            self.bearing_age / config.DESIGN_LIFE["bearing"],
-            self.impeller_age / config.DESIGN_LIFE["impeller"],
-        ]
-        return np.array(obs, dtype=np.float32)
+        return make_observation(self.p, reading, np.mean(self.eff_history), self.bearing_age, self.impeller_age)
