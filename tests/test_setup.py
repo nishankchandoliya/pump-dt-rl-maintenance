@@ -33,5 +33,11 @@ def test_seed_sets_do_not_overlap():
     assert config.TRAIN_SEED_START > max(set().union(*sets))
 
 
+def test_only_the_final_evaluation_uses_the_test_seeds():
+    files = sorted((config.ROOT / "src").glob("*.py")) + sorted((config.ROOT / "scripts").glob("*.py"))
+    users = [p.relative_to(config.ROOT).as_posix() for p in files if "TEST_SEEDS" in p.read_text(encoding="utf-8")]
+    assert users == ["src/config.py", "scripts/evaluate_all.py"]
+
+
 def test_root_is_repo_folder():
     assert (config.ROOT / "src" / "config.py").is_file()
